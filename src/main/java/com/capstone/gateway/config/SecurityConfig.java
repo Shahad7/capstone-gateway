@@ -20,8 +20,8 @@ import com.capstone.gateway.service.JwtUserDetailsService;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    @Autowired
-    JwtUserDetailsService jwtUserDetailsService;
+//    @Autowired
+//    JwtUserDetailsService jwtUserDetailsService;
 
     @Autowired
     JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -30,18 +30,18 @@ public class SecurityConfig {
     JwtFilter jwtFilter;
 
     @Bean
-    PasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder();
-    }
-
-
-    @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
         http
             .cors((c)->c.disable())
             .csrf((c)->c.disable())
             .authorizeHttpRequests((request)->request
-            .requestMatchers("/api/v1/users/test").permitAll()
+            .requestMatchers(
+                    "/api/v1/users/test",
+                    "/api/v1/users/login",
+                    "/api/v1/users/validate",
+                    "/api/v1/users/signup",
+                    "/api/v1/calculate/**")
+            .permitAll()
             .anyRequest()
             .authenticated())  
             .exceptionHandling((e)->e.authenticationEntryPoint(jwtAuthenticationEntryPoint))
@@ -51,14 +51,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    
-    //configures the AuthenticationManager
-    @Bean
-    AuthenticationManager configureAuthenticationManager(HttpSecurity http) throws Exception{
-        AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
-        authenticationManagerBuilder.userDetailsService(jwtUserDetailsService)
-                .passwordEncoder(passwordEncoder());
-        return authenticationManagerBuilder.build();
-    }
+
 
 }

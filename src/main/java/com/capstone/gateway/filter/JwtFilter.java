@@ -1,21 +1,24 @@
 package com.capstone.gateway.filter;
-
+import org.springframework.asm.Handle;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import com.capstone.gateway.service.JwtUserDetailsService;
-import com.capstone.gateway.util.JwtUtil;
+
 
 import io.jsonwebtoken.io.IOException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import java.util.HashMap;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
@@ -26,7 +29,7 @@ public class JwtFilter extends OncePerRequestFilter {
     @Autowired
     JwtUserDetailsService jwtUserDetailsService;
     @Autowired
-    JwtUtil jwtUtil;
+    RestTemplate template;
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException, java.io.IOException {
         String bearerToken = request.getHeader("Authorization");
@@ -37,13 +40,19 @@ public class JwtFilter extends OncePerRequestFilter {
             token = bearerToken.substring(7);
 
         try{
-            username = jwtUtil.extractUsername(token);
-            UserDetails userDetails = jwtUserDetailsService.loadUserByUsername(username);
+            String url = "http://localhost:5001/api/v1/users/validate";
+            HashMap<String,String> jwtToken = new HashMap<>();
+            jwtToken.put("token",token);
+            ResponseEntity responseObj = template.postForEntity(url,jwtToken, HashMap.class);
+            if(responseObj.getStatusCodeValue()==200){
+                username = ((HashMap<String,String>) responseObj.getBody()).get("username");
+                UserDetails userDetails = jwtUserDetailsService.loadUserByUsername(username);
+                if(username!=null&& SecurityContextHolder.getContext().getAuthentication()==null){
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
 
-            if(username!=null&& SecurityContextHolder.getContext().getAuthentication()==null){
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
             }
 
         }
@@ -52,9 +61,7 @@ public class JwtFilter extends OncePerRequestFilter {
             System.out.println(e.getMessage());
             }
         }
-        else{
-            System.out.println("invalid token");
-        }
+
         filterChain.doFilter(request,response);
     }
 }

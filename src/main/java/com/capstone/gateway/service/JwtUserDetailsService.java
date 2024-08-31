@@ -20,15 +20,14 @@ public class JwtUserDetailsService implements UserDetailsService {
 	
 	@Autowired
 	RestTemplate template;
-	@Autowired
-	Environment env;
    
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-    	String url = env.getProperty("routes.user-service")+"/"+username;
+    	String url = "http://localhost:5001/api/v1/users/"+username;
         HashMap<String,Object> user = template.getForEntity(url,HashMap.class).getBody();
         if(user==null||!user.containsKey("username"))
             throw new UsernameNotFoundException(username);
+
         String extractedUsername = user.get("username").toString();
         String extractedPassword = user.get("password").toString();
         Collection<GrantedAuthority> roles = new ArrayList<>();

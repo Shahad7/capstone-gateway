@@ -1,0 +1,13 @@
+{"properties": [
+  {
+    "name": "routes",
+    "type": "java.lang.String",
+    "description": "A description for 'routes'"
+  },
+  {
+    "name": "jwt.token.secret",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.token.secret'"
+  }
+]} 
+ 

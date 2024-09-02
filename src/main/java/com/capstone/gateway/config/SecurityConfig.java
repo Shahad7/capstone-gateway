@@ -15,10 +15,17 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import com.capstone.gateway.filter.JwtFilter;
 import com.capstone.gateway.service.JwtUserDetailsService;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig {
+public class SecurityConfig{
 //    @Autowired
 //    JwtUserDetailsService jwtUserDetailsService;
 
@@ -52,6 +59,21 @@ public class SecurityConfig {
         return http.build();
     }
 
+
+    @Bean
+    public CorsFilter corsWebFilter() {
+
+        final CorsConfiguration corsConfig = new CorsConfiguration();
+        corsConfig.setAllowedOrigins(Collections.singletonList("http://localhost:4200"));
+        corsConfig.setMaxAge(3600L);
+        corsConfig.setAllowedMethods(Arrays.asList("POST", "GET", "PUT", "DELETE", "OPTIONS"));
+        corsConfig.addAllowedHeader("*");
+
+        final CorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        ((UrlBasedCorsConfigurationSource) source).registerCorsConfiguration("/**", corsConfig);
+
+        return new CorsFilter(source);
+    }
 
 
 }

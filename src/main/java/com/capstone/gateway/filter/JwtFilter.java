@@ -1,5 +1,8 @@
 package com.capstone.gateway.filter;
-import org.springframework.asm.Handle;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.logging.Logger;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -9,16 +12,13 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
+
 import com.capstone.gateway.service.JwtUserDetailsService;
 
-
-import io.jsonwebtoken.io.IOException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import java.util.HashMap;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
@@ -30,8 +30,10 @@ public class JwtFilter extends OncePerRequestFilter {
     JwtUserDetailsService jwtUserDetailsService;
     @Autowired
     RestTemplate template;
+    
+    private static final Logger LOGGER = Logger.getLogger(ALREADY_FILTERED_SUFFIX);
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException, java.io.IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, java.io.IOException {
         String bearerToken = request.getHeader("Authorization");
         String username = null;
         String token = null;
@@ -57,8 +59,10 @@ public class JwtFilter extends OncePerRequestFilter {
 
         }
         catch (Exception e){
-            System.out.println("Invalid bearer token");
-            System.out.println(e.getMessage());
+	             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+	             response.getWriter().write("Invalid token: " + e.getMessage());
+        		LOGGER.info("Invalid token : "+e.getMessage());
+    
             }
         }
 

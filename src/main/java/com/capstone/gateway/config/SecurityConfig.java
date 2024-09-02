@@ -41,6 +41,8 @@ public class SecurityConfig {
                     "/api/v1/users/signup",
                     "/api/v1/calculate/**")
             .permitAll()
+            .requestMatchers(HttpMethod.OPTIONS,"/**")
+            .permitAll()
             .anyRequest()
             .authenticated())  
             .exceptionHandling((e)->e.authenticationEntryPoint(jwtAuthenticationEntryPoint))
